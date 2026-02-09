@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { LayoutDashboard, Package, ShoppingCart, Users } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function AdminLayout({
   children,
@@ -12,27 +14,25 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-
-    if (!token || !userStr) {
+    if (status === 'unauthenticated') {
       router.push('/login');
-      return;
-    }
-
-    const user = JSON.parse(userStr);
-    if (!user.isAdmin) {
+    } else if (status === 'authenticated' && !session?.user?.isAdmin) {
       router.push('/');
-      return;
     }
+  }, [status, session, router]);
 
-    setIsAdmin(true);
-  }, [router]);
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
-  if (!isAdmin) {
+  if (!session?.user?.isAdmin) {
     return null;
   }
 

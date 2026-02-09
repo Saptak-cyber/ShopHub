@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -28,24 +29,26 @@ interface Order {
 export default function OrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (status === 'unauthenticated') {
       router.push('/login');
       return;
     }
 
-    if (searchParams.get('success') === 'true') {
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 5000);
-    }
+    if (status === 'authenticated') {
+      if (searchParams.get('success') === 'true') {
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 5000);
+      }
 
-    fetchOrders();
-  }, [router, searchParams]);
+      fetchOrders();
+    }
+  }, [status, router, searchParams]);
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -79,12 +82,16 @@ export default function OrdersPage() {
     }
   };
 
-  if (isLoading) {
+  if (status === 'loading' || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
         <LoadingSpinner size="lg" />
       </div>
     );
+  }
+
+  if (!session?.user) {
+    return null;
   }
 
   return (

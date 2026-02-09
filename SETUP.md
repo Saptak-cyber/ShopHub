@@ -44,14 +44,24 @@ Create `.env` in the root directory:
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/ecommerce"
 
-# JWT Secret (run: openssl rand -base64 32)
-JWT_SECRET="your-super-secret-jwt-key-change-this"
+# NextAuth (run: openssl rand -base64 32)
+NEXTAUTH_SECRET="your-super-secret-nextauth-key-change-this"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Google OAuth (Optional - see GOOGLE_OAUTH_SETUP.md for instructions)
+GOOGLE_CLIENT_ID="your_google_client_id_here"
+GOOGLE_CLIENT_SECRET="your_google_client_secret_here"
 
 # Stripe Test Keys (get from https://dashboard.stripe.com/test/apikeys)
 STRIPE_SECRET_KEY="sk_test_..."
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
+
+# Legacy JWT (used for backward compatibility)
+JWT_SECRET="your-super-secret-jwt-key-change-this"
 ```
+
+**Note**: Google OAuth is optional. If you want to enable "Sign in with Google", follow the detailed guide in [`GOOGLE_OAUTH_SETUP.md`](./GOOGLE_OAUTH_SETUP.md).
 
 ## 4. Initialize Database
 
@@ -76,7 +86,14 @@ Visit http://localhost:3000
 
 ## 6. Test the Application
 
-### Login Credentials (After Seeding)
+### Login Options
+
+**Option 1: Google OAuth (if configured)**
+- Click "Sign in with Google" on login/register pages
+- Choose your Google account
+- Automatically creates your account
+
+**Option 2: Email/Password (After Seeding)**
 
 **Admin Account**:
 - Email: admin@example.com

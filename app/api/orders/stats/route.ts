@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import orderService from '@/lib/services/order.service';
-import { requireAdmin } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 export async function GET(request: NextRequest) {
   try {
-    requireAdmin(request);
+    const session = await auth();
+
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized - Admin access required' },
+        { status: 403 }
+      );
+    }
+
     const stats = await orderService.getOrderStats();
 
     return NextResponse.json({

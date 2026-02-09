@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import productService from '@/lib/services/product.service';
-import { requireAdmin } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 export async function GET(request: NextRequest) {
@@ -49,7 +49,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    requireAdmin(request);
+    const session = await auth();
+
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized - Admin access required' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     const product = await productService.createProduct(body);

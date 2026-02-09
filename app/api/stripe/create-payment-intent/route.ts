@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import stripeService from '@/lib/services/stripe.service';
-import { requireAuth } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 export async function POST(request: NextRequest) {
   try {
-    requireAuth(request);
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { amount } = body;
 

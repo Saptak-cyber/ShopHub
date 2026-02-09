@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import orderService from '@/lib/services/order.service';
-import { requireAuth, requireAdmin } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
+import { EmailService } from '@/lib/services/email.service';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = requireAuth(request);
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
 
-    if (user.isAdmin) {
+    if (session.user.isAdmin) {
       const filters = status ? { status } : undefined;
       const orders = await orderService.getAllOrders(filters);
 
@@ -18,7 +28,7 @@ export async function GET(request: NextRequest) {
         data: orders,
       });
     } else {
-      const orders = await orderService.getUserOrders(user.id);
+      const orders = await orderService.getUserOrders(session.user.id);
 
       return NextResponse.json({
         success: true,
@@ -48,16 +58,40 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = requireAuth(request);
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { items, shippingAddress, stripePaymentId } = body;
 
     const order = await orderService.createOrder({
-      userId: user.id,
+      userId: session.user.id,
       items,
       shippingAddress,
       stripePaymentId,
     });
+
+    // Send order confirmation email (don't wait for it)
+    if (session.user.email) {
+      EmailService.sendOrderConfirmation(session.user.email, {
+        orderId: order.id,
+        total: Number(order.total),
+        items: order.items.map((item: any) => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: Number(item.price)
+        })),
+        shippingAddress: order.shippingAddress
+      }).catch((error) => {
+        console.error("Failed to send order confirmation email:", error);
+      });
+    }
 
     return NextResponse.json({
       success: true,

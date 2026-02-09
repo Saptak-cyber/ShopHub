@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import orderService from '@/lib/services/order.service';
-import { requireAuth } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 export async function GET(
@@ -8,10 +8,18 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = requireAuth(request);
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
-    const userId = user.isAdmin ? undefined : user.id;
+    const userId = session.user.isAdmin ? undefined : session.user.id;
     const order = await orderService.getOrderById(id, userId);
 
     return NextResponse.json({

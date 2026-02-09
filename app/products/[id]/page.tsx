@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import apiClient from '@/lib/api-client';
 import Button from '@/components/ui/Button';
@@ -12,6 +11,8 @@ import { useCartStore } from '@/store/cart';
 import { useToastStore } from '@/store/toast';
 import { formatPrice } from '@/lib/utils';
 import { ShoppingCart, ArrowLeft, Package } from 'lucide-react';
+import { ReviewForm } from '@/components/ReviewForm';
+import { ReviewList } from '@/components/ReviewList';
 
 interface Product {
   id: string;
@@ -24,8 +25,9 @@ interface Product {
   stock: number;
 }
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ProductDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -174,6 +176,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-16 border-t border-zinc-800 pt-12">
+          <h2 className="text-3xl font-bold mb-8">Customer Reviews</h2>
+          
+          {/* Review Form */}
+          <div className="mb-12">
+            <ReviewForm productId={id} onSuccess={fetchProduct} />
+          </div>
+
+          {/* Reviews List */}
+          <ReviewList productId={id} />
         </div>
       </div>
     </div>

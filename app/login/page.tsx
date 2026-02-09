@@ -1,21 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { useToastStore } from '@/store/toast';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const addToast = useToastStore((state) => state.addToast);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/products');
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +54,15 @@ export default function LoginPage() {
     }
   };
 
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
       <Card className="w-full max-w-md">
@@ -59,6 +79,19 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+
+            {/* Google Sign-In */}
+            <GoogleSignInButton text="Sign in with Google" callbackUrl="/products" />
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-zinc-800" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-zinc-900 px-2 text-zinc-500">Or continue with email</span>
+              </div>
+            </div>
 
             <Input
               label="Email"
