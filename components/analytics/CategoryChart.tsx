@@ -30,7 +30,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+            label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
             outerRadius={120}
             fill="#8884d8"
             dataKey="value"
@@ -45,7 +45,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
               border: '1px solid #27272a',
               borderRadius: '8px'
             }}
-            formatter={(value: number) => `$${value.toFixed(2)}`}
+            formatter={(value: number | undefined) => `$${(value ?? 0).toFixed(2)}`}
           />
           <Legend />
         </PieChart>

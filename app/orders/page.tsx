@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -9,6 +9,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Badge from '@/components/ui/Badge';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { Package, CheckCircle } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 interface Order {
   id: string;
@@ -26,7 +28,7 @@ interface Order {
   }>;
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -178,5 +180,17 @@ export default function OrdersPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <LoadingSpinner size="lg" />
+      </div>
+    }>
+      <OrdersPageContent />
+    </Suspense>
   );
 }

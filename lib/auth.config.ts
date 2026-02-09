@@ -58,7 +58,7 @@ export const authConfig = {
   callbacks: {
     async jwt({ token, user, account, trigger, session }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id as string;
         token.isAdmin = (user as any).isAdmin || false;
       }
 
@@ -78,9 +78,13 @@ export const authConfig = {
     },
     async signIn({ account, profile }) {
       if (account?.provider === "google") {
+        if (!profile?.email) {
+          return false;
+        }
+
         // Check if user exists
         const existingUser = await prisma.user.findUnique({
-          where: { email: profile?.email }
+          where: { email: profile.email }
         });
 
         // If user exists with password, link the account

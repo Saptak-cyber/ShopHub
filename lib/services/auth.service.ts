@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import prisma from '../db';
-import { generateToken } from '../auth';
 import { ConflictError, UnauthorizedError, ValidationError } from '../errors';
 
 export class AuthService {
@@ -25,12 +24,6 @@ export class AuthService {
       },
     });
 
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    });
-
     return {
       user: {
         id: user.id,
@@ -38,7 +31,6 @@ export class AuthService {
         name: user.name,
         isAdmin: user.isAdmin,
       },
-      token,
     };
   }
 
@@ -49,7 +41,7 @@ export class AuthService {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
+    if (!user || !user.password) {
       throw new UnauthorizedError('Invalid credentials');
     }
 
@@ -59,12 +51,6 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    });
-
     return {
       user: {
         id: user.id,
@@ -72,7 +58,6 @@ export class AuthService {
         name: user.name,
         isAdmin: user.isAdmin,
       },
-      token,
     };
   }
 

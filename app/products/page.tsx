@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import ProductCard from '@/components/ProductCard';
@@ -9,6 +9,8 @@ import { useCartStore } from '@/store/cart';
 import { useToastStore } from '@/store/toast';
 import { Search, Filter } from 'lucide-react';
 import Input from '@/components/ui/Input';
+
+export const dynamic = 'force-dynamic';
 
 interface Product {
   id: string;
@@ -21,7 +23,7 @@ interface Product {
   stock: number;
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -168,5 +170,17 @@ export default function ProductsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <LoadingSpinner size="lg" />
+      </div>
+    }>
+      <ProductsPageContent />
+    </Suspense>
   );
 }

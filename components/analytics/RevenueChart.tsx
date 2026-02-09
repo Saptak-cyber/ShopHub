@@ -41,9 +41,10 @@ export function RevenueChart({ data }: RevenueChartProps) {
               border: '1px solid #27272a',
               borderRadius: '8px'
             }}
-            formatter={(value: number, name: string) => {
-              if (name === "revenue") return [`$${value.toFixed(2)}`, "Revenue"];
-              return [value, "Orders"];
+            formatter={(value: number | undefined, name: string | undefined) => {
+              const val = value ?? 0;
+              if (name === "revenue") return [`$${val.toFixed(2)}`, "Revenue"];
+              return [val, "Orders"];
             }}
           />
           <Legend />

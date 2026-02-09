@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { LayoutDashboard, Package, ShoppingCart } from 'lucide-react';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AdminLayout({
   children,
