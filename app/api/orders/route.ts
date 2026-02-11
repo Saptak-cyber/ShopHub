@@ -68,13 +68,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { items, shippingAddress, stripePaymentId } = body;
+    const { items, shippingAddress, razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
 
-    const order = await orderService.createOrder({
+    const order = await orderService.verifyAndCreateOrder({
       userId: session.user.id,
       items,
       shippingAddress,
-      stripePaymentId,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
     });
 
     // Send order confirmation email (don't wait for it)

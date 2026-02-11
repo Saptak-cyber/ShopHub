@@ -179,25 +179,25 @@ After seeding the database, you can use these credentials:
 - id, email, name, password, isAdmin, timestamps
 
 ### Product
-- id, name, description, price, stock, imageUrl, category, featured, timestamps
+- id, name, description, price, stock, images, category, featured, timestamps
 
 ### Order
-- id, userId, total, status, stripePaymentId, shippingAddress, timestamps
+- id, userId, total, status, razorpayPaymentId, shippingAddress, timestamps
 
 ### OrderItem
 - id, orderId, productId, quantity, price
 
-## Stripe Integration
+## Razorpay Integration
 
 ### Test Cards
 
-For testing payments, use Stripe's test cards:
+For testing payments in Razorpay test mode:
 
-- **Success**: 4242 4242 4242 4242
-- **Decline**: 4000 0000 0000 0002
-- **3D Secure**: 4000 0025 0000 3155
+- **Success**: 4111 1111 1111 1111
+- **Failure**: 4012 0010 3714 1112
+- **Network Failure**: 5104 0600 0000 0008
 
-Use any future expiration date, any 3-digit CVC, and any postal code.
+Use any future expiration date, any CVV, and any cardholder name.
 
 ### Webhook Setup
 

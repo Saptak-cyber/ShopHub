@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import stripeService from '@/lib/services/stripe.service';
+import razorpayService from '@/lib/services/razorpay.service';
+import { auth } from '@/lib/auth';
 import { AppError } from '@/lib/errors';
 
 export async function POST(request: NextRequest) {
   try {
-    const signature = request.headers.get('stripe-signature');
-    
-    if (!signature) {
+    const session = await auth();
+
+    if (!session?.user) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Missing stripe-signature header',
-        },
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { amount } = body;
+
+    if (!amount || amount <= 0) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid amount' },
         { status: 400 }
       );
     }
 
-    const body = await request.arrayBuffer();
-    const payload = Buffer.from(body);
-
-    const result = await stripeService.handleWebhook(payload, signature);
+    const result = await razorpayService.createOrder(amount);
 
     return NextResponse.json({
       success: true,
@@ -36,6 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.error('Create order error:', error);
     return NextResponse.json(
       {
         success: false,

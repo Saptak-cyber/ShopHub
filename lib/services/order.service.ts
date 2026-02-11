@@ -1,6 +1,7 @@
 import prisma from '../db';
 import { NotFoundError, ValidationError } from '../errors';
 import productService from './product.service';
+import razorpayService from './razorpay.service';
 
 interface CreateOrderItem {
   productId: string;
@@ -11,7 +12,16 @@ interface CreateOrderData {
   userId: string;
   items: CreateOrderItem[];
   shippingAddress: string;
-  stripePaymentId?: string;
+  razorpayPaymentId?: string;
+}
+
+interface VerifyAndCreateOrderData {
+  userId: string;
+  items: CreateOrderItem[];
+  shippingAddress: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
 }
 
 export class OrderService {
@@ -48,8 +58,8 @@ export class OrderService {
       data: {
         userId: data.userId,
         total: totalAmount,
-        status: data.stripePaymentId ? 'paid' : 'pending',
-        stripePaymentId: data.stripePaymentId,
+        status: data.razorpayPaymentId ? 'paid' : 'pending',
+        razorpayPaymentId: data.razorpayPaymentId,
         shippingAddress: data.shippingAddress,
         items: {
           create: orderItems,
@@ -69,6 +79,27 @@ export class OrderService {
     }
 
     return order;
+  }
+
+  async verifyAndCreateOrder(data: VerifyAndCreateOrderData) {
+    // First verify the Razorpay payment signature
+    const isValid = razorpayService.verifyPaymentSignature(
+      data.razorpayOrderId,
+      data.razorpayPaymentId,
+      data.razorpaySignature
+    );
+
+    if (!isValid) {
+      throw new ValidationError('Invalid payment signature');
+    }
+
+    // Create the order with the verified payment
+    return this.createOrder({
+      userId: data.userId,
+      items: data.items,
+      shippingAddress: data.shippingAddress,
+      razorpayPaymentId: data.razorpayPaymentId,
+    });
   }
 
   async getOrderById(orderId: string, userId?: string) {

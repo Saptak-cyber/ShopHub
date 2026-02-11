@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCartStore } from '@/store/cart';
 import apiClient from '@/lib/api-client';
 import Button from '@/components/ui/Button';
@@ -11,12 +9,15 @@ import Input from '@/components/ui/Input';
 import { formatPrice } from '@/lib/utils';
 import { Lock, ShoppingBag } from 'lucide-react';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+// Declare Razorpay on window object
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 function CheckoutForm() {
   const router = useRouter();
-  const stripe = useStripe();
-  const elements = useElements();
   const { items, getTotal, clearCart } = useCartStore();
 
   const [name, setName] = useState('');
@@ -25,6 +26,7 @@ function CheckoutForm() {
   const [city, setCity] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('');
+  const [phone, setPhone] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
@@ -46,68 +48,72 @@ function CheckoutForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!stripe || !elements) {
-      return;
-    }
-
     setIsProcessing(true);
     setError('');
 
     try {
-      const paymentIntentResponse = await apiClient.post('/stripe/create-payment-intent', {
+      // Create Razorpay order
+      const orderResponse = await apiClient.post('/razorpay/create-order', {
         amount: total,
       });
 
-      const { clientSecret } = paymentIntentResponse.data.data;
+      const { orderId, amount, currency, key } = orderResponse.data.data;
 
-      const cardElement = elements.getElement(CardElement);
-      if (!cardElement) {
-        throw new Error('Card element not found');
-      }
+      const shippingAddress = `${address}, ${city}, ${postalCode}, ${country}`;
 
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              name,
-              email,
-              address: {
-                line1: address,
-                city,
-                postal_code: postalCode,
-                country,
-              },
-            },
+      // Initialize Razorpay checkout
+      const options = {
+        key, // Razorpay key
+        amount, // Amount in paise
+        currency,
+        name: 'Your Store Name',
+        description: 'Order Payment',
+        order_id: orderId,
+        prefill: {
+          name,
+          email,
+          contact: phone,
+        },
+        theme: {
+          color: '#6366f1', // indigo-500
+        },
+        handler: async function (response: any) {
+          try {
+            // Payment successful - create order in database
+            await apiClient.post('/orders', {
+              items: items.map((item) => ({
+                productId: item.id,
+                quantity: item.quantity,
+              })),
+              shippingAddress,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+
+            clearCart();
+            router.push('/orders?success=true');
+          } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to create order');
+            setIsProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
           },
-        }
-      );
+        },
+      };
 
-      if (stripeError) {
-        setError(stripeError.message || 'Payment failed');
+      if (typeof window !== 'undefined' && window.Razorpay) {
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
+      } else {
+        setError('Razorpay SDK not loaded. Please refresh the page.');
         setIsProcessing(false);
-        return;
-      }
-
-      if (paymentIntent?.status === 'succeeded') {
-        const shippingAddress = `${address}, ${city}, ${postalCode}, ${country}`;
-        
-        await apiClient.post('/orders', {
-          items: items.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-          })),
-          shippingAddress,
-          stripePaymentId: paymentIntent.id,
-        });
-
-        clearCart();
-        router.push('/orders?success=true');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Something went wrong');
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -130,6 +136,15 @@ function CheckoutForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+          <Input
+            label="Phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+            placeholder="+91 1234567890"
+          />
+          <div />
           <div className="md:col-span-2">
             <Input
               label="Address"
@@ -161,28 +176,6 @@ function CheckoutForm() {
         </div>
       </div>
 
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-4">Payment Information</h2>
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: '16px',
-                  color: '#fafafa',
-                  '::placeholder': {
-                    color: '#71717a',
-                  },
-                },
-                invalid: {
-                  color: '#ef4444',
-                },
-              },
-            }}
-          />
-        </div>
-      </div>
-
       {error && (
         <div className="rounded-lg bg-red-900/20 border border-red-800 p-3 text-sm text-red-400">
           {error}
@@ -191,7 +184,7 @@ function CheckoutForm() {
 
       <Button
         type="submit"
-        disabled={!stripe || isProcessing}
+        disabled={isProcessing}
         isLoading={isProcessing}
         className="w-full"
         size="lg"
@@ -222,9 +215,7 @@ export default function CheckoutPage() {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <Elements stripe={stripePromise}>
-              <CheckoutForm />
-            </Elements>
+            <CheckoutForm />
           </div>
 
           <div className="lg:col-span-1">
