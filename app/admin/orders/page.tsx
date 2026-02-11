@@ -76,6 +76,8 @@ export default function AdminOrdersPage() {
         return 'warning';
       case 'cancelled':
         return 'error';
+      case 'cancelled+Refunded':
+        return 'error';
       default:
         return 'default';
     }
@@ -125,6 +127,7 @@ export default function AdminOrdersPage() {
           <option value="shipped">Shipped</option>
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
+          <option value="cancelled+refunded">Cancelled+Refunded</option>
         </select>
       </div>
 
@@ -173,6 +176,7 @@ export default function AdminOrdersPage() {
                       <option value="shipped">Shipped</option>
                       <option value="delivered">Delivered</option>
                       <option value="cancelled">Cancelled</option>
+                      <option value="cancelled+refunded">Cancelled+Refunded</option>
                     </select>
 
                     <button
