@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Images } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
@@ -10,7 +10,7 @@ interface ProductCardProps {
   name: string;
   description: string;
   price: number | string;
-  imageUrl: string;
+  images: string[];
   category: string;
   featured?: boolean;
   stock: number;
@@ -22,12 +22,14 @@ export default function ProductCard({
   name,
   description,
   price,
-  imageUrl,
+  images,
   category,
   featured,
   stock,
   onAddToCart,
 }: ProductCardProps) {
+  const imageUrl = images?.[0] || '/placeholder.png';
+  
   return (
     <div className="group relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-all hover:border-indigo-600 hover:shadow-lg hover:shadow-indigo-600/20">
       <Link href={`/products/${id}`}>
@@ -41,6 +43,14 @@ export default function ProductCard({
           {featured && (
             <div className="absolute left-3 top-3">
               <Badge variant="info">Featured</Badge>
+            </div>
+          )}
+          {images && images.length > 1 && (
+            <div className="absolute right-3 top-3">
+              <div className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
+                <Images size={12} />
+                {images.length}
+              </div>
             </div>
           )}
           {stock === 0 && (

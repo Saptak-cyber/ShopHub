@@ -6,7 +6,7 @@ interface CreateProductData {
   description: string;
   price: number;
   stock: number;
-  imageUrl: string;
+  images: string[];
   category: string;
   featured?: boolean;
 }
@@ -16,7 +16,7 @@ interface UpdateProductData {
   description?: string;
   price?: number;
   stock?: number;
-  imageUrl?: string;
+  images?: string[];
   category?: string;
   featured?: boolean;
 }
@@ -79,8 +79,12 @@ export class ProductService {
   }
 
   async createProduct(data: CreateProductData) {
-    if (!data.name || !data.description || !data.price || !data.imageUrl || !data.category) {
+    if (!data.name || !data.description || !data.price || !data.images || !data.category) {
       throw new ValidationError('Missing required product fields');
+    }
+
+    if (!Array.isArray(data.images) || data.images.length === 0) {
+      throw new ValidationError('At least one product image is required');
     }
 
     const product = await prisma.product.create({

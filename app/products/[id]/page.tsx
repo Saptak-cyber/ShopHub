@@ -19,7 +19,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
+  images: string[];
   category: string;
   featured: boolean;
   stock: number;
@@ -32,6 +32,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const addItem = useCartStore((state) => state.addItem);
   const addToast = useToastStore((state) => state.addToast);
 
@@ -59,7 +60,7 @@ export default function ProductDetailPage() {
         id: product.id,
         name: product.name,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrl: product.images?.[0] || '/placeholder.png',
         quantity,
       });
       addToast(`${product.name} (x${quantity}) added to cart!`, 'success');
@@ -103,17 +104,44 @@ export default function ProductDetailPage() {
         </button>
 
         <div className="grid gap-8 lg:grid-cols-2">
-          <div className="relative aspect-square overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
-            {product.featured && (
-              <div className="absolute left-4 top-4">
-                <Badge variant="info">Featured</Badge>
+          <div className="space-y-4">
+            {/* Main Image */}
+            <div className="relative aspect-square overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+              <Image
+                src={product.images?.[selectedImageIndex] || '/placeholder.png'}
+                alt={product.name}
+                fill
+                className="object-cover"
+                priority
+              />
+              {product.featured && (
+                <div className="absolute left-4 top-4">
+                  <Badge variant="info">Featured</Badge>
+                </div>
+              )}
+            </div>
+            
+            {/* Thumbnail Gallery */}
+            {product.images && product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all ${
+                      selectedImageIndex === index
+                        ? 'border-indigo-600'
+                        : 'border-zinc-800 hover:border-zinc-600'
+                    }`}
+                  >
+                    <Image
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>

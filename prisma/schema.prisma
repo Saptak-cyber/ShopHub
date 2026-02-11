@@ -130,7 +130,7 @@ model Product {
   description String   @db.Text
   price       Decimal  @db.Decimal(10, 2)
   stock       Int      @default(0)
-  imageUrl    String
+  images      String[]
   category    String
   featured    Boolean  @default(false)
   createdAt   DateTime @default(now())

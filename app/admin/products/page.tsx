@@ -7,6 +7,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Badge from '@/components/ui/Badge';
+import ImageUploadMultiple from '@/components/ImageUploadMultiple';
 import { useToastStore } from '@/store/toast';
 import { formatPrice } from '@/lib/utils';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
@@ -17,7 +18,7 @@ interface Product {
   description: string;
   price: number;
   stock: number;
-  imageUrl: string;
+  images: string[];
   category: string;
   featured: boolean;
 }
@@ -35,7 +36,7 @@ export default function AdminProductsPage() {
     description: '',
     price: '',
     stock: '',
-    imageUrl: '',
+    images: [] as string[],
     category: '',
     featured: false,
   });
@@ -66,7 +67,7 @@ export default function AdminProductsPage() {
         description: product.description,
         price: product.price.toString(),
         stock: product.stock.toString(),
-        imageUrl: product.imageUrl,
+        images: product.images || [],
         category: product.category,
         featured: product.featured,
       });
@@ -77,7 +78,7 @@ export default function AdminProductsPage() {
         description: '',
         price: '',
         stock: '',
-        imageUrl: '',
+        images: [],
         category: '',
         featured: false,
       });
@@ -186,7 +187,7 @@ export default function AdminProductsPage() {
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <img
-                      src={product.imageUrl}
+                      src={product.images?.[0] || '/placeholder.png'}
                       alt={product.name}
                       className="h-12 w-12 rounded-lg border border-zinc-800 object-cover"
                     />
@@ -269,11 +270,12 @@ export default function AdminProductsPage() {
               required
             />
           </div>
-          <Input
-            label="Image URL"
-            value={formData.imageUrl}
-            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-            required
+          <ImageUploadMultiple
+            images={formData.images}
+            onChange={(images) => setFormData({ ...formData, images })}
+            folder="ecommerce/products"
+            maxImages={5}
+            label="Product Images"
           />
           <Input
             label="Category"

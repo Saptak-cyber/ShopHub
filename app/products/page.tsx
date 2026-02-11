@@ -17,7 +17,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
+  images: string[];
   category: string;
   featured: boolean;
   stock: number;
@@ -81,7 +81,7 @@ function ProductsPageContent() {
       id: product.id,
       name: product.name,
       price: product.price,
-      imageUrl: product.imageUrl,
+      imageUrl: product.images?.[0] || '/placeholder.png',
     });
     addToast(`${product.name} added to cart!`, 'success');
   };

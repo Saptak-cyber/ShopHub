@@ -7,7 +7,7 @@ import { StarRating } from "./StarRating";
 import Button from "./ui/Button";
 import Input from "./ui/Input";
 import { Card } from "./ui/Card";
-import { Upload, X } from "lucide-react";
+import ImageUploadMultiple from "./ImageUploadMultiple";
 import { useToastStore } from "@/store/toast";
 import axios from "axios";
 
@@ -79,9 +79,7 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // For now, this is a placeholder
-    // In production, you would upload to Cloudinary here
-    addToast("Image upload feature coming soon!", "info");
+    // Removed placeholder - now using ImageUploadMultiple component
   };
 
   const removeImage = (index: number) => {
@@ -154,56 +152,14 @@ export function ReviewForm({ productId, onSuccess }: ReviewFormProps) {
           </div>
         </div>
 
-        {/* Images (placeholder for future Cloudinary integration) */}
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Add Photos (Optional)
-          </label>
-          <div className="flex items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => document.getElementById("image-upload")?.click()}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Images
-            </Button>
-            <input
-              id="image-upload"
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-            <span className="text-xs text-zinc-500">
-              Coming soon: Upload up to 5 images
-            </span>
-          </div>
-
-          {/* Image Preview */}
-          {images.length > 0 && (
-            <div className="flex gap-2 mt-3">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={image}
-                    alt={`Review image ${index + 1}`}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 hover:bg-red-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Images */}
+        <ImageUploadMultiple
+          images={images}
+          onChange={setImages}
+          folder="ecommerce/reviews"
+          maxImages={5}
+          label="Add Photos (Optional)"
+        />
 
         {/* Submit Button */}
         <div className="flex justify-end pt-4">
