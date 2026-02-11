@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
-import apiClient from '@/lib/api-client';
 import { useToastStore } from '@/store/toast';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -34,21 +33,27 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await apiClient.post('/auth/login', {
+      const result = await signIn('credentials', {
+        redirect: false,
         email,
         password,
       });
 
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      if (result?.error) {
+        // Show user-friendly error message
+        const errorMessage = result.error === 'CredentialsSignin' 
+          ? 'Invalid email or password' 
+          : result.error;
+        setError(errorMessage);
+        addToast(errorMessage, 'error');
+      } else if (result?.ok) {
         addToast('Login successful! Welcome back.', 'success');
-        setTimeout(() => {
-          router.push('/products');
-        }, 500);
+        router.push('/products');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      const errorMessage = 'Login failed. Please try again.';
+      setError(errorMessage);
+      addToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }

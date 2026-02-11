@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { useToastStore } from '@/store/toast';
@@ -54,12 +54,20 @@ export default function RegisterPage() {
       });
 
       if (response.data.success) {
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.data.user));
-        addToast('Account created successfully! Welcome to ShopHub.', 'success');
-        setTimeout(() => {
+        addToast('Account created successfully! Signing you in...', 'success');
+        
+        // Automatically sign in after registration
+        const result = await signIn('credentials', {
+          redirect: false,
+          email,
+          password,
+        });
+
+        if (result?.ok) {
           router.push('/products');
-        }, 500);
+        } else {
+          setError('Account created but auto-login failed. Please login manually.');
+        }
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
