@@ -102,7 +102,7 @@ export class AnalyticsService {
       select: {
         id: true,
         name: true,
-        imageUrl: true,
+        images: true,
         category: true,
         price: true
       }
@@ -116,7 +116,7 @@ export class AnalyticsService {
       return {
         productId: item.productId,
         name: product?.name || 'Unknown',
-        imageUrl: product?.imageUrl,
+        imageUrl: product?.images?.[0],
         category: product?.category,
         quantitySold: item._sum.quantity || 0,
         revenue: Number(item._sum.price || 0)
@@ -221,7 +221,7 @@ export class AnalyticsService {
       select: {
         id: true,
         name: true,
-        imageUrl: true,
+        images: true,
         price: true
       }
     });
@@ -237,7 +237,7 @@ export class AnalyticsService {
       return {
         productId: item.productId,
         name: product?.name || 'Unknown',
-        imageUrl: product?.imageUrl,
+        imageUrl: product?.images?.[0],
         views,
         purchases,
         conversionRate: parseFloat(conversionRate.toFixed(2)),
@@ -259,7 +259,7 @@ export class AnalyticsService {
         id: true,
         name: true,
         stock: true,
-        imageUrl: true,
+        images: true,
         category: true
       },
       orderBy: {
