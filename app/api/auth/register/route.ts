@@ -6,9 +6,9 @@ import { EmailService } from '@/lib/services/email.service';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password, name, isAdmin } = body;
 
-    const result = await authService.register(email, password, name);
+    const result = await authService.register(email, password, name, isAdmin);
 
     // Send welcome email (don't wait for it)
     EmailService.sendWelcomeEmail(email, name).catch((error) => {

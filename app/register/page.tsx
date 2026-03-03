@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const addToast = useToastStore((state) => state.addToast);
@@ -51,6 +52,7 @@ export default function RegisterPage() {
         name,
         email,
         password,
+        isAdmin,
       });
 
       if (response.data.success) {
@@ -150,6 +152,23 @@ export default function RegisterPage() {
               placeholder="••••••••"
               required
             />
+
+            {/* Admin Account Option */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isAdmin"
+                checked={isAdmin}
+                onChange={(e) => setIsAdmin(e.target.checked)}
+                className="h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0"
+              />
+              <label
+                htmlFor="isAdmin"
+                className="text-sm text-zinc-300 cursor-pointer"
+              >
+                Create as Admin Account
+              </label>
+            </div>
 
             <Button
               type="submit"

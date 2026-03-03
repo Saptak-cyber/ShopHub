@@ -3,7 +3,7 @@ import prisma from '../db';
 import { ConflictError, UnauthorizedError, ValidationError } from '../errors';
 
 export class AuthService {
-  async register(email: string, password: string, name: string) {
+  async register(email: string, password: string, name: string, isAdmin?: boolean) {
     if (!email || !password || !name) {
       throw new ValidationError('Email, password, and name are required');
     }
@@ -21,6 +21,7 @@ export class AuthService {
         email,
         password: hashedPassword,
         name,
+        isAdmin: isAdmin || false,
       },
     });
 
